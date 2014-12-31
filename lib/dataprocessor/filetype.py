@@ -14,7 +14,7 @@ def str_to_filetype(filetype):
     Parameters
     ----------
     filetype: str
-        filetype as string
+        filetype as string defined in enum FileType
 
     Returns
     -------
