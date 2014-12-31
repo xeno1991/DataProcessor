@@ -2,12 +2,14 @@ import enum
 import os
 
 
-FileType = enum.Enum("FileType", "NONE ini conf yaml json")
+FileType = enum.Enum("FileType", "NONE ini yaml")
 
 
 def str_to_filetype(filetype):
     """
     Get filetype from str.
+
+    Filetype as string is allowed those: ini, yaml
 
     Parameters
     ----------
