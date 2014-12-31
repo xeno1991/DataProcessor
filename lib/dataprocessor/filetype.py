@@ -5,29 +5,6 @@ import os
 FileType = enum.Enum("FileType", "NONE ini yaml")
 
 
-def str_to_filetype(filetype):
-    """
-    Get filetype from str.
-
-    Filetype as string is allowed those: ini, yaml
-
-    Parameters
-    ----------
-    filetype: str
-        filetype as string defined in enum FileType
-
-    Returns
-    -------
-    FileType enum. If unknown filetype is given, throw warning.
-    """
-    try:
-        return FileType[filetype]
-    except KeyError:
-        # TODO update warning (#169)
-        Warning("Unknown filetype " + filetype)
-        return FileType.NONE
-
-
 def path_to_filetype(path):
     """
     Get filetype from path (filename extension).

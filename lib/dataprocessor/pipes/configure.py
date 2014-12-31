@@ -5,7 +5,6 @@ import yaml
 from ConfigParser import SafeConfigParser
 
 from ..filetype import FileType
-from ..filetype import str_to_filetype
 from ..filetype import path_to_filetype
 from ..utility import read_configure
 
@@ -86,6 +85,11 @@ def add(node_list, filename, filetype=None, section="parameters"):
         filename of parameter configure file
         If file does not exist, add null list.
 
+    filetype : {'ini', 'yaml'}
+        Filetype of parameter files. It must be consistent with
+        `filetype.Filetype`. Parameter files are recognized as this
+        filetype regardless of its filename extension.
+
     section : str
         Specify section name in configure file.
 
@@ -107,7 +111,7 @@ def add(node_list, filename, filetype=None, section="parameters"):
         conf_d = {}
         if os.path.exists(confpath):
             if filetype:
-                ft = str_to_filetype(filetype)
+                ft = FileType[filetype]
             else:
                 ft = path_to_filetype(confpath)
             parser = get_parser(ft)
