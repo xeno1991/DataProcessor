@@ -5,7 +5,7 @@ import os
 import copy
 
 from .utils import TestNodeListAndDir
-from ..pipes.configure import add, no_section, get_filetype
+from ..pipes.configure import add, no_section
 
 
 class TestConfigure(TestNodeListAndDir):
@@ -57,13 +57,6 @@ class TestConfigure(TestNodeListAndDir):
     def _get_testdata(self, filename):
         with open(self._get_testdata_path(filename), "r") as f:
             return f.read()
-
-    def test_get_filetype(self):
-        self.assertEqual("ini",  get_filetype("/path/to/hoge.ini"))
-        self.assertEqual("ini",  get_filetype("/path/to/hoge.conf"))
-        self.assertEqual("yaml", get_filetype("/path/to/hoge.yml"))
-        self.assertEqual("yaml", get_filetype("/path/to/hoge.yaml"))
-        self.assertEqual(None,   get_filetype("/path/to/hoge.jpg"))
 
     def test_add(self):
         import copy

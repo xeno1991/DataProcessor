@@ -4,6 +4,9 @@ import os.path
 import yaml
 from ConfigParser import SafeConfigParser
 
+from ..filetype import FileType
+from ..filetype import str_to_filetype
+from ..filetype import path_to_filetype
 from ..utility import read_configure
 
 
@@ -57,47 +60,19 @@ def get_parser(filetype):
 
     Parameters
     ----------
-    filetype : str
-        These filetypes are available; "ini", "conf", "yaml"
+    filetype : FileType
+        see enum filetype.FileType
 
     Returns
     -------
     function that takes 2 args, confpath and section.
     """
     # check extension in case insensitive way
-    filetype = filetype.lower()
-    if filetype in ("ini"):
+    if filetype == FileType.ini:
         return parse_ini
-    elif filetype in ("yaml"):
+    elif filetype == FileType.yaml:
         return parse_yaml
     else:
-        Warning("Unknown filetype " + filetype)
-        return None
-
-
-def get_filetype(path):
-    """
-    Get filetype from path (filename extension).
-
-    Parameters
-    ----------
-    path: str
-        path to a file
-
-    Returns
-    -------
-    filetype as a string.
-    """
-    _, ext = os.path.splitext(path)
-
-    # check extension in case insensitive way
-    ext = ext.lower()
-    if ext in (".ini", ".conf"):
-        return "ini"
-    elif ext in (".yml", ".yaml"):
-        return "yaml"
-    else:
-        Warning("Unknown filename extension " + ext)
         return None
 
 
@@ -131,9 +106,12 @@ def add(node_list, filename, filetype=None, section="parameters"):
         confpath = os.path.join(node["path"], filename)
         conf_d = {}
         if os.path.exists(confpath):
-            if not filetype:
-                filetype = get_filetype(confpath)
-            parser = get_parser(filetype)
+            if filetype:
+                ft = str_to_filetype(filetype)
+            else:
+                ft = path_to_filetype(confpath)
+            print ft.name
+            parser = get_parser(ft)
             if parser:
                 conf_d = parser(confpath, section)
         else:
