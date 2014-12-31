@@ -101,7 +101,7 @@ def add(node_list, filename, filetype=None, section="parameters"):
     >>> add(node_list, "configure.conf", "defaults") # doctest:+SKIP
 
     """
-    node_key = "configure"
+    NODE_KEY = "configure"
     for node in node_list:
         confpath = os.path.join(node["path"], filename)
         conf_d = {}
@@ -110,19 +110,18 @@ def add(node_list, filename, filetype=None, section="parameters"):
                 ft = str_to_filetype(filetype)
             else:
                 ft = path_to_filetype(confpath)
-            print ft.name
             parser = get_parser(ft)
             if parser:
                 conf_d = parser(confpath, section)
         else:
             Warning("parameter file does not exist.")
-        if node_key not in node:
-            node[node_key] = conf_d
+        if NODE_KEY not in node:
+            node[NODE_KEY] = conf_d
         else:
             for key in conf_d:
-                if key in node[node_key]:
+                if key in node[NODE_KEY]:
                     Warning("overwrite configures")
-            node[node_key].update(conf_d)
+            node[NODE_KEY].update(conf_d)
 
     return node_list
 
