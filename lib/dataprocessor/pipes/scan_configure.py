@@ -1,9 +1,10 @@
 from .scan import directory
 from .configure import add
+from ..filetype import FILETYPES
 
 
 def scan_configure(node_list, root, whitelist, followlinks=False,
-                   section="parameters"):
+                   filetype=None, section="parameters"):
     """Scan then configure.
 
     see pipes.scan.directory and pipes.configure.add.
@@ -20,6 +21,8 @@ def scan_configure(node_list, root, whitelist, followlinks=False,
     followlinks : {'False', 'True'}, optional
         Whether scan in symbolic link.
         Be aware that setting this to True may lead to infinite recursion.
+    filetype : {'ini', 'yaml'}, optional
+        see pipes.configure.add
     section : str
         Specify section name in configure file.
 
@@ -32,7 +35,7 @@ def scan_configure(node_list, root, whitelist, followlinks=False,
         whitelist = [whitelist]
     node_list = directory(node_list, root, whitelist, followlinks)
     for filename in whitelist:
-        node_list = add(node_list, filename, None, section)
+        node_list = add(node_list, filename, filetype, section)
     return node_list
 
 
@@ -45,6 +48,10 @@ def register(pipe_dics):
                    "nargs": "+", }),
                  ],
         "kwds": [("followlinks", {"help": "whether scan in symbolic link"}),
-                 ("section", {"help": "section parameters are written"})],
+                 ("section", {"help": "section parameters are written"}),
+                 ("filetype", {"help": "filetype. If not given, determined "
+                                       "automatically by the filename "
+                                       "extension.",
+                  "choices": FILETYPES})],
         "desc": "Scan nodes from all directories under the directory 'root'.",
     }

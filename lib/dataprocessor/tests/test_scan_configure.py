@@ -14,7 +14,8 @@ class TestScanConfigure(unittest.TestCase):
 
     def testScanYaml(self):
         ROOT = os.path.dirname(os.path.abspath(__file__))
-        node_list = scan_configure([], ROOT, "param.yml", False, "parameters")
+        node_list = scan_configure([], ROOT, "param.yml", False, None,
+                                   "parameters")
 
         self.assertEqual(3, len(node_list))
 

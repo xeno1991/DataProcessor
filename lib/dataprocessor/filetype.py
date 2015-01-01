@@ -2,7 +2,8 @@ import enum
 import os
 
 
-FileType = enum.Enum("FileType", "NONE ini yaml")
+FILETYPES = ["ini", "yaml"]
+FileType = enum.Enum("FileType", "NONE " + " ".join(FILETYPES))
 
 
 def path_to_filetype(path):

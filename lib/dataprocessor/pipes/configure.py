@@ -4,6 +4,7 @@ import os.path
 import yaml
 from ConfigParser import SafeConfigParser
 
+from ..filetype import FILETYPES
 from ..filetype import FileType
 from ..filetype import path_to_filetype
 from ..utility import read_configure
@@ -174,9 +175,10 @@ def register(pipes_dics):
         "func": add,
         "args": ["filename"],
         "kwds": [("section", {"help": "section parameters are written"}),
-                 ("filetype", {"help": "filetype [ini, yaml]. If not given, "
-                                       "determined automatically by the "
-                                       "filename extension."})],
+                 ("filetype", {"help": "filetype. If not given, determined "
+                                       "automatically by the filename "
+                                       "extension.",
+                               "choices": FILETYPES})],
         "desc": "Read parameter file (use ConfigParser)",
     }
     pipes_dics["configure_no_section"] = {
