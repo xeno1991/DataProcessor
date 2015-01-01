@@ -186,6 +186,16 @@ dpmanip add_conf /path/to/run c 2.0
 
 で登録可能です。
 
+### スキャンと読み込みを同時に行う
+
+```command
+dpmanip scan_configure path/to/dir parameter.ini [--filetype=ini]
+```
+
+とすれば，parameter.ini
+が存在するディレクトリをrunとして登録し，さらにパラメータの読み込みまでしてくれます．
+
+
 使い方
 ------
 ### 一覧の表示(webapp)
