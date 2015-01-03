@@ -1,5 +1,6 @@
 import enum
 import os
+import sys
 
 
 FILETYPES = ["ini", "yaml"]
@@ -28,6 +29,5 @@ def guess_from_path(path):
     elif ext in (".yml", ".yaml"):
         return FileType.yaml
     else:
-        # TODO update warning (#169)
-        Warning("Unknown filename extension " + ext)
+        print >>sys.stderr, "Unknown ext '{}'".format(ext)
         return FileType.NONE
