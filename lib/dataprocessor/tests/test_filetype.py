@@ -1,15 +1,19 @@
 import unittest
 
 from ..filetype import FileType
-from ..filetype import path_to_filetype
+from ..filetype import guess_from_path
 
 
 class TestFileType(unittest.TestCase):
 
     def test_get_filetype(self):
-        self.assertEqual(FileType.ini,  path_to_filetype("/path/to/hoge.ini"))
-        self.assertEqual(FileType.ini,  path_to_filetype("/path/to/hoge.conf"))
-        self.assertEqual(FileType.yaml, path_to_filetype("/path/to/hoge.yml"))
-        self.assertEqual(FileType.yaml, path_to_filetype("/path/to/hoge.yaml"))
+        self.assertEqual(FileType.ini,
+                         guess_from_path("/path/to/hoge.ini"))
+        self.assertEqual(FileType.ini,
+                         guess_from_path("/path/to/hoge.conf"))
+        self.assertEqual(FileType.yaml,
+                         guess_from_path("/path/to/hoge.yml"))
+        self.assertEqual(FileType.yaml,
+                         guess_from_path("/path/to/hoge.yaml"))
         # TODO catch exception after #169 is merges
-        # self.assertEqual(FileType.NONE, path_to_filetype("/path/to/hoge.jpg"))
+        # self.assertEqual(FileType.NONE, guess_from_path("/path/to/hoge.jpg"))

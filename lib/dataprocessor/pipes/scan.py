@@ -92,5 +92,5 @@ def register(pipe_dics):
                    "nargs": "+", }),
                  ],
         "kwds": [("followlinks", {"help": "whether scan in symbolic link"})],
-        "desc": "Scan nodes from all directories under the directory 'root'.",
+        "desc": "Scan all directories under 'root'.",
     }

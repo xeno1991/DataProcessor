@@ -6,7 +6,7 @@ FILETYPES = ["ini", "yaml"]
 FileType = enum.Enum("FileType", "NONE " + " ".join(FILETYPES))
 
 
-def path_to_filetype(path):
+def guess_from_path(path):
     """
     Get filetype from path (filename extension).
 

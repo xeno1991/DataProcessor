@@ -53,5 +53,5 @@ def register(pipe_dics):
                                        "automatically by the filename "
                                        "extension.",
                   "choices": FILETYPES})],
-        "desc": "Scan nodes from all directories under the directory 'root'.",
+        "desc": "Scan all directories under 'root' and load their configures.",
     }

@@ -1,12 +1,13 @@
 # coding=utf-8
 """Pipes of configure."""
 import os.path
+import sys
 import yaml
 from ConfigParser import SafeConfigParser
 
 from ..filetype import FILETYPES
 from ..filetype import FileType
-from ..filetype import path_to_filetype
+from ..filetype import guess_from_path
 from ..utility import read_configure
 
 
@@ -27,7 +28,11 @@ def parse_ini(confpath, section):
     """
     conf = SafeConfigParser()
     conf.optionxform = str
-    conf.read(confpath)
+    try:
+        conf.read(confpath)
+    except Exception as e:
+        sys.stderr.write(str(e))
+        return {}
     return {k: v for k, v in conf.items(section)}
 
 
@@ -114,7 +119,12 @@ def add(node_list, filename, filetype=None, section="parameters"):
             if filetype:
                 ft = FileType[filetype]
             else:
-                ft = path_to_filetype(confpath)
+                try:
+                    ft = guess_from_path(confpath)
+                except KeyError as e:
+                    # TODO raise dpError (#169)
+                    sys.stderr.write(str(e))
+                    continue
             parser = get_parser(ft)
             if parser:
                 conf_d = parser(confpath, section)
