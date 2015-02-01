@@ -7,7 +7,7 @@ FILETYPES = ["ini", "yaml"]
 FileType = enum.Enum("FileType", "NONE " + " ".join(FILETYPES))
 
 
-def guess_from_path(path):
+def guess_filetype_from_path(path):
     """
     Get filetype from path (filename extension).
 
@@ -18,7 +18,7 @@ def guess_from_path(path):
 
     Returns
     -------
-    FileType enum. If unknown filename extension is given, throw warning
+    FileType enum. If unknown filename extension is given, show warning
     """
     _, ext = os.path.splitext(path)
 

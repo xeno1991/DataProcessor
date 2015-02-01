@@ -29,6 +29,10 @@ class TestConfigure_INI(unittest.TestCase):
         nl = load(self.node_list, "parameters.ini", filetype="INI")
         self.assertEqual(nl[0]["configure"], {"ny": "23"})
 
+    def test_invalid_filetype(self):
+        nl = load(self.node_list, "parameters.ini", filetype="ababababa")
+        self.assertEqual(nl[0]["configure"], {"ny": "23"})
+
     def test_load_missing_name(self):
         load(self.node_list, "parame.yamlu")  # not raises
 

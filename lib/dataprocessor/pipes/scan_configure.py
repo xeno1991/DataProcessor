@@ -1,5 +1,5 @@
 from .scan import directory
-from .configure import add
+from .configure import load
 from ..filetype import FILETYPES
 
 
@@ -35,7 +35,7 @@ def scan_configure(node_list, root, whitelist, followlinks=False,
         whitelist = [whitelist]
     node_list = directory(node_list, root, whitelist, followlinks)
     for filename in whitelist:
-        node_list = add(node_list, filename, filetype, section)
+        node_list = load(node_list, filename, filetype, section)
     return node_list
 
 
