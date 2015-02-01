@@ -1,14 +1,13 @@
 # coding=utf-8
-"""Pipes of configure."""
-import os.path
-import sys
-import yaml
-from ConfigParser import SafeConfigParser
 
-from ..filetype import FILETYPES
-from ..filetype import FileType
-from ..filetype import guess_from_path
-from ..utility import read_configure
+import sys
+import os.path as op
+import yaml
+import ConfigParser as cp
+
+from .. import pipe
+from ..utility import read_configure, check_file
+from ..exception import DataProcessorError as dpError
 
 
 def parse_ini(confpath, section):
@@ -26,14 +25,18 @@ def parse_ini(confpath, section):
     -------
     Specified section as a dictionary.
     """
-    conf = SafeConfigParser()
+    conf = cp.SafeConfigParser()
     conf.optionxform = str
     try:
-        conf.read(confpath)
-    except Exception as e:
-        sys.stderr.write(str(e))
-        return {}
-    return {k: v for k, v in conf.items(section)}
+        read_conf = conf.read(confpath)
+    except cp.MissingSectionHeaderError:
+        raise dpError("Invalid INI file: " + confpath)
+    if not read_conf:
+        raise dpError("Cannot read INI configure file: " + confpath)
+    try:
+        return dict(conf.items(section))
+    except cp.NoSectionError:
+        raise dpError("Section does not found: " + confpath)
 
 
 def parse_yaml(confpath, section):
@@ -52,98 +55,83 @@ def parse_yaml(confpath, section):
     Specified section as a dictionary.
     """
     with open(confpath, "r") as f:
-        d = yaml.load(f)
-        if section not in d:
-            Warning("No such section {} in {}".format(section, confpath))
-            return {}
-        return d[section]
+        try:
+            d = yaml.load(f)
+        except yaml.YAMLError:
+            raise dpError("Fail to parse YAML file : " + confpath)
+    if section not in d:
+        raise dpError("No such section '{}' in {}".format(section, confpath))
+    return d[section]
+
+parsers = {
+    "ini": parse_ini,
+    "yaml": parse_yaml,
+}
 
 
-def get_parser(filetype):
+def get_filetype(path):
     """
-    Get parser corresponding to the filetype
+    Get filetype from path (filename extension).
 
     Parameters
     ----------
-    filetype : FileType
-        see enum filetype.FileType
+    path: str
+        path to a file
 
     Returns
     -------
-    function that takes 2 args, confpath and section.
+    filetype as a string.
     """
+    _, ext = op.splitext(path)
+
     # check extension in case insensitive way
-    if filetype == FileType.ini:
-        return parse_ini
-    elif filetype == FileType.yaml:
-        return parse_yaml
+    ext = ext.lower()
+    if ext in (".ini", ".conf"):
+        return "ini"
+    elif ext in (".yml", ".yaml"):
+        return "yaml"
     else:
-        return None
+        raise dpError("Unknown filename extension ({})".format(ext))
 
 
-def add(node_list, filename, filetype=None, section="parameters"):
-    """
-    Add configure to node_list.
+@pipe.type("run")
+def load(node, filename, filetype=None, section="parameters"):
+    """ Load configure
 
     Parameters
     ----------
     filename : str
         filename of parameter configure file
         If file does not exist, add null list.
-
-    filetype : {'ini', 'yaml'}
-        Filetype of parameter files. It must be consistent with
-        `filetype.Filetype`. Parameter files are recognized as this
-        filetype regardless of its filename extension.
-
     section : str
         Specify section name in configure file.
 
-    Returns
-    -------
-    list
-        node_list which is a list of dict.
-
     Examples
     --------
-    >>> add(node_list, "configure.conf") # doctest:+SKIP
+    >>> load(node_list, "configure.conf") # doctest:+SKIP
     >>> # Change load section.
-    >>> add(node_list, "configure.conf", "defaults") # doctest:+SKIP
+    >>> load(node_list, "configure.conf", "defaults") # doctest:+SKIP
 
     """
-    NODE_KEY = "configure"
-    for node in node_list:
-        confpath = os.path.join(node["path"], filename)
-        conf_d = {}
-        if os.path.exists(confpath):
-            if filetype:
-                ft = FileType[filetype]
-            else:
-                try:
-                    ft = guess_from_path(confpath)
-                except KeyError as e:
-                    # TODO raise dpError (#169)
-                    sys.stderr.write(str(e))
-                    continue
-            parser = get_parser(ft)
-            if parser:
-                conf_d = parser(confpath, section)
-        else:
-            Warning("parameter file does not exist.")
-        if NODE_KEY not in node:
-            node[NODE_KEY] = conf_d
-        else:
-            for key in conf_d:
-                if key in node[NODE_KEY]:
-                    Warning("overwrite configures")
-            node[NODE_KEY].update(conf_d)
+    confpath = check_file(op.join(node["path"], filename))
+    if not filetype:
+        filetype = get_filetype(confpath)
+    filetype = filetype.lower()
+    if filetype not in parsers:
+        print >>sys.stderr, "Invalid filetype : " + filetype
+        print >>sys.stderr, "Guess from extention"
+        filetype = get_filetype(confpath)
+    cfg = parsers[filetype](confpath, section)
 
-    return node_list
+    if "configure" not in node:
+        node["configure"] = {}
+    node["configure"].update(cfg)
+    return node
 
 
-def no_section(node_list, filename, split_char="=", comment_char=["#"]):
-    """
-    Add configure to node_list.
+@pipe.type("run")
+def no_section(node, filename, split_char="=", comment_char=["#"]):
+    """ Load configure
 
     Parameters
     ----------
@@ -155,11 +143,6 @@ def no_section(node_list, filename, split_char="=", comment_char=["#"]):
     comment_char : str
         Specify the comment line signal char.
 
-    Returns
-    -------
-    list
-        node_list which is a list of dict.
-
     Examples
     --------
     >>> no_section(node_list, "foo.conf") # doctest:+SKIP
@@ -168,32 +151,31 @@ def no_section(node_list, filename, split_char="=", comment_char=["#"]):
     ... # doctest:+SKIP
 
     """
-    for node in node_list:
-        path = node["path"]
-        cfg_path = os.path.join(path, filename)
-        if not os.path.exists(cfg_path):
-            continue
-        cfg = read_configure(cfg_path, split_char, comment_char)
-        if "configure" not in node:
-            node["configure"] = {}
-        node["configure"].update(cfg)
-    return node_list
+    path = node["path"]
+    cfg_path = check_file(op.join(path, filename))
+    cfg = read_configure(cfg_path, split_char, comment_char)
+    if "configure" not in node:
+        node["configure"] = {}
+    node["configure"].update(cfg)
+    return node
 
 
 def register(pipes_dics):
     pipes_dics["configure"] = {
-        "func": add,
+        "func": load,
         "args": ["filename"],
         "kwds": [("section", {"help": "section parameters are written"}),
-                 ("filetype", {"help": "filetype. If not given, determined "
-                                       "automatically by the filename "
-                                       "extension.",
-                               "choices": FILETYPES})],
+                 ("filetype", {"help": "filetype [ini, yaml]. If not given, "
+                                       "determined automatically by the "
+                                       "filename extension."})],
         "desc": "Read parameter file (use ConfigParser)",
     }
     pipes_dics["configure_no_section"] = {
         "func": no_section,
         "args": ["filename"],
-        "kwds": ["split_char", "comment_char"],
+        "kwds": [
+            ("split_char", {"help": "separetor of parameters"}),
+            ("comment_char", {"help": "charactors defines comment line"})
+        ],
         "desc": "Read parameter file (without section)",
     }
